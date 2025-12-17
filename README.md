@@ -44,6 +44,30 @@ If you prefer manual steps:
    flutter run
    ```
 
+## How to Run on Another PC
+
+### Option A: Just Play the Game (Android Only)
+If your friend just wants to play on their Android phone:
+1.  Run `build_app.bat` on your computer.
+2.  Send them the file: `build/app/outputs/flutter-apk/app-release.apk`.
+3.  They install and play.
+
+### Option B: Run the Project (For Development/Windows)
+If you want to run the project on their computer (e.g., to play on Windows or edit code):
+
+**Step 1: Prepare (On YOUR Computer)**
+1.  Run `clean_for_transfer.bat`.
+    *   This deletes temporary files to make the folder small (e.g., 5MB instead of 300MB).
+2.  Zip the entire `stick_hero_flutter` folder.
+3.  Send the zip file to your friend.
+
+**Step 2: Run (On FRIEND'S Computer)**
+1.  Unzip the folder.
+2.  **Prerequisite**: Ensure they have [Flutter installed](https://docs.flutter.dev/get-started/install).
+3.  Double-click `run_game.bat`.
+    *   This script will automatically set up the project and launch the game.
+    *   It will ask for a device (Android Emulator, Connected Phone, or Windows Desktop).
+
 ## Dependencies
 - `shared_preferences`: For storing high scores.
 - `vibration`: For haptic feedback.
