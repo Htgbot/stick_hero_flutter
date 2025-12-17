@@ -2,6 +2,7 @@ import 'dart:math';
 
 enum GamePhase { waiting, stretching, turning, walking, transitioning, falling }
 enum GameMode { easy, hard }
+enum MapType { jungle, cool, lava, paradise }
 
 class Platform {
   double x;
@@ -58,6 +59,7 @@ class GameState {
   List<Tree> trees = [];
   
   int score = 0;
+  int revives = 3;
   bool showPerfect = false;
   
   // For animation
@@ -65,15 +67,18 @@ class GameState {
   
   final Random _rnd = Random();
   GameMode mode = GameMode.easy;
+  MapType mapType = MapType.jungle;
   
   // Getters for current state
   Stick? get currentStick => sticks.isNotEmpty ? sticks.last : null;
   
-  void reset(GameMode gameMode) {
+  void reset(GameMode gameMode, [MapType selectedMapType = MapType.jungle]) {
     mode = gameMode;
+    mapType = selectedMapType;
     phase = GamePhase.waiting;
     sceneOffset = 0;
     score = 0;
+    revives = 3;
     showPerfect = false;
     
     // Initial platforms
@@ -94,6 +99,26 @@ class GameState {
     
     heroX = platforms[0].right - GameConfig.heroDistanceFromEdge;
     heroY = 0;
+  }
+
+  bool canRevive() {
+    return revives > 0;
+  }
+
+  void revive() {
+    if (revives > 0) {
+      revives--;
+      phase = GamePhase.waiting;
+      heroY = 0;
+      
+      // Reset stick
+      if (sticks.isNotEmpty) {
+        sticks.last.length = 0;
+        sticks.last.rotation = 0;
+        // Reset hero position to the start of the stick (end of previous platform)
+        heroX = sticks.last.x - GameConfig.heroDistanceFromEdge;
+      }
+    }
   }
   
   void generatePlatform() {

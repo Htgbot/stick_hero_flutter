@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -7,8 +8,9 @@ import 'painters.dart';
 
 class GameScreen extends StatefulWidget {
   final GameMode mode;
+  final MapType mapType;
 
-  const GameScreen({Key? key, required this.mode}) : super(key: key);
+  const GameScreen({Key? key, required this.mode, this.mapType = MapType.jungle}) : super(key: key);
 
   @override
   _GameScreenState createState() => _GameScreenState();
@@ -56,7 +58,7 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
   }
 
   void _startGame() {
-    gameState.reset(widget.mode);
+    gameState.reset(widget.mode, widget.mapType);
     setState(() {
       isGameOver = false;
       showPerfect = false;
@@ -116,6 +118,13 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
     });
   }
 
+  void _revive() {
+    setState(() {
+      gameState.revive();
+      isGameOver = false;
+    });
+  }
+
   @override
   void dispose() {
     _ticker.dispose();
@@ -134,6 +143,47 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
     }
   }
 
+  Widget _buildGlassNeonButton({required IconData icon, required String label}) {
+    return Container(
+      width: 200,
+      padding: EdgeInsets.symmetric(vertical: 15),
+      decoration: BoxDecoration(
+        color: Colors.red.withOpacity(0.2),
+        borderRadius: BorderRadius.circular(30),
+        border: Border.all(color: Colors.redAccent, width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.redAccent.withOpacity(0.5),
+            blurRadius: 20,
+            spreadRadius: 2,
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, color: Colors.white, size: 30),
+          SizedBox(width: 10),
+          Text(
+            label,
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 24,
+              shadows: [
+                Shadow(
+                  blurRadius: 10.0,
+                  color: Colors.red,
+                  offset: Offset(0, 0),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -148,7 +198,7 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
               painter: GamePainter(gameState, MediaQuery.of(context).size),
             ),
             
-            // Score
+            // Score and Hearts
             Positioned(
               top: 30,
               right: 30,
@@ -171,6 +221,16 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
                         fontWeight: FontWeight.bold,
                         color: Colors.black54,
                       ),
+                    ),
+                    SizedBox(height: 5),
+                    Row(
+                      children: List.generate(3, (index) {
+                        return Icon(
+                          index < gameState.revives ? Icons.favorite : Icons.favorite_border,
+                          color: Colors.red,
+                          size: 24,
+                        );
+                      }),
                     ),
                   ],
                 ),
@@ -216,37 +276,57 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
                   ),
                 ),
               ),
-              
-            // Restart Button
+
+            // Game Over Popup
             if (isGameOver)
-              Center(
-                child: GestureDetector(
-                  onTap: _startGame,
-                  child: Container(
-                    width: 120,
-                    height: 120,
-                    decoration: BoxDecoration(
-                      color: Colors.red,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black26,
-                          blurRadius: 10,
-                          offset: Offset(0, 5),
-                        )
-                      ]
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      "RESTART",
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 20,
+              Stack(
+                children: [
+                  // Blurred Background
+                  Positioned.fill(
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                      child: Container(
+                        color: Colors.black.withOpacity(0.2),
                       ),
                     ),
                   ),
-                ),
+                  // Popup Content
+                  Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (gameState.canRevive())
+                          Padding(
+                            padding: const EdgeInsets.only(bottom: 20),
+                            child: GestureDetector(
+                              onTap: _revive,
+                              child: _buildGlassNeonButton(
+                                icon: Icons.arrow_forward,
+                                label: "CONTINUE",
+                              ),
+                            ),
+                          ),
+                        GestureDetector(
+                          onTap: _startGame,
+                          child: _buildGlassNeonButton(
+                            icon: Icons.refresh,
+                            label: "RESTART",
+                          ),
+                        ),
+                        SizedBox(height: 20),
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.pop(context);
+                          },
+                          child: _buildGlassNeonButton(
+                            icon: Icons.home,
+                            label: "HOME",
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
               
             // Back Button
