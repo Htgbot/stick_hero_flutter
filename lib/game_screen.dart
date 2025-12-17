@@ -249,7 +249,7 @@ class _GameScreenState extends State<GameScreen> with SingleTickerProviderStateM
                     style: TextStyle(
                       fontSize: 20, 
                       fontWeight: FontWeight.w600,
-                      color: Colors.black
+                      color: gameState.mapType == MapType.paradise ? Colors.white : Colors.black
                     ),
                   ),
                 ),
